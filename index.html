@@ -283,6 +283,7 @@
     <h1 style="margin:0 auto;">
       <img src="imagenes/logo.png" class="logo" style="cursor:pointer;" onclick="window.location.href='index.html'">
     </h1>
+    <button id="verDesactivadosBtn" style="position:absolute;left:30px;top:50%;transform:translateY(-50%);padding:8px 22px;background:#c0392b;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;transition:background 0.2s;" onclick="window.location.href='desactivados.html'">Dispositivos Desactivados</button>
     <div id="usuarioHeader" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:12px;">
       <span id="usuarioActual" style="font-weight:bold;color:#1565c0;"></span>
       <button id="logoutBtn" style="padding:6px 18px;background:#c0392b;color:#fff;border:none;border-radius:6px;cursor:pointer;">Cerrar sesión</button>
@@ -321,7 +322,7 @@
             <option value="Distribucion">Distribucion</option>
             <option value="Distrito Miramontes">Distrito Miramontes</option>
             <option value="Herco Juticalpa">Herco Juticalpa</option>
-            <option value="Herco Champañal">Herco Champañal</option>
+            <option value="Herco Champagnath">Herco Champagnath</option>
             <option value="Bodega Los Graneros">Bodega Los Graneros</option>
           </select>
           <label style="margin:0 4px 0 12px;white-space:nowrap;">Técnico:</label>
@@ -365,7 +366,7 @@
               <option value="Distribucion">Distribucion</option>
               <option value="Distrito Miramontes">Distrito Miramontes</option>
               <option value="Herco Juticalpa">Herco Juticalpa</option>
-              <option value="Herco Champañal">Herco Champañal</option>
+              <option value="Herco Champagnath">Herco Champagnath</option>
               <option value="Bodega Los Graneros">Bodega Los Graneros</option>
             </select>
 
@@ -562,10 +563,13 @@ $(document).ready(function() {
               return fechaA - fechaB;
             });
             let html = '';
-            if (articulos.length > 0) {
+            // Filtrar activos y desactivados (corregido: solo 1 es activo)
+            const activos = articulos.filter(a => String(a.activo) === '1' || a.activo === 1 || a.activo === true);
+            // const desactivados = articulos.filter(a => String(a.activo) === '0' || a.activo === 0 || a.activo === false); // Ya no se usa aquí
+            if (activos.length > 0) {
               html = '<table style="width:100%;border-collapse:collapse;text-align:left;">';
               html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie o Asignacion</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Técnico responsable en reparacion</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
-              articulos.forEach(articulo => {
+              activos.forEach(articulo => {
                 // Determinar si se debe deshabilitar la opción 'pendiente'
                 const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
                 html += `<tr>
@@ -597,7 +601,7 @@ $(document).ready(function() {
                   </td>
                   <td>
                     <button class="ver-historial-btn" data-id="${articulo.id}" style="background:#1976d2;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;margin-bottom:4px;">Historial</button><br>
-                    <button class="delete-btn" data-id="${articulo.id}" style="color:white;background:#c0392b;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">Eliminar</button>
+                    <button class="toggle-activo-btn" data-id="${articulo.id}" data-activo="${articulo.activo !== false ? '1' : '0'}" style="color:white;background:${articulo.activo !== false ? '#c0392b' : '#27ae60'};border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">${articulo.activo !== false ? 'Desactivar' : 'Activar'}</button>
                   </td>
                 </tr>`;
               });
@@ -606,6 +610,10 @@ $(document).ready(function() {
               html = '<p style="text-align:center;">No hay artículos registrados.</p>';
             }
             $('#listadoArticulos').html(html);
+
+            // --- SECCIÓN DE DESACTIVADOS ---
+            // Eliminada: ahora los desactivados solo se muestran en desactivados.html
+            $('#seccionDesactivados').remove();
 
             // Mostrar notificación de dispositivos vencidos (más de 3 días en pendiente o en proceso)
             const hoy = new Date();
@@ -750,20 +758,39 @@ $(document).ready(function() {
               }
             });
 
-            // Evento para eliminar
-            $('.delete-btn').on('click', function() {
-              if (confirm('¿Seguro que deseas eliminar este artículo?')) {
-                const id = $(this).data('id');
-                $.ajax({
-                  url: 'deleteArticulo.php',
-                  method: 'POST',
-                  data: JSON.stringify({ id }),
-                  contentType: 'application/json',
-                  success: function() {
-                    loadArticulos();
-                  }
-                });
-              }
+            // Evento para activar/desactivar
+            $(document).off('click', '.toggle-activo-btn').on('click', '.toggle-activo-btn', function() {
+              const id = $(this).data('id');
+              // Forzar a número 1 o 0 para evitar problemas de tipo y refresco
+              const activo = Number($(this).data('activo')) === 1;
+              const usuario = localStorage.getItem('usuario') || '';
+              const nota = prompt('Ingrese una nota para el historial (opcional):') || '';
+              const nuevoActivo = activo ? 0 : 1;
+              // Guardar en historial
+              $.ajax({
+                url: 'historialEstado.php',
+                method: 'POST',
+                data: JSON.stringify({
+                  id_articulo: id,
+                  estado_anterior: activo ? 'activo' : 'inactivo',
+                  estado_nuevo: nuevoActivo ? 'activo' : 'inactivo',
+                  usuario: usuario + (nota ? ' | Nota: ' + nota : '')
+                }),
+                contentType: 'application/json',
+                complete: function() {
+                  // Actualizar estado activo
+                  $.ajax({
+                    url: 'updateNota.php',
+                    method: 'POST',
+                    data: JSON.stringify({ id, activo: nuevoActivo }),
+                    contentType: 'application/json',
+                    complete: function() {
+                      // Forzar recarga para evitar problemas de cache de eventos o renderizado
+                      setTimeout(loadArticulos, 200);
+                    }
+                  });
+                }
+              });
             });
           },
           error: function(xhr, status, error) {
@@ -825,9 +852,9 @@ $(document).ready(function() {
           });
           // Filtro de texto general
           if (filtroTexto && texto.indexOf(filtroTexto) === -1) mostrar = false;
-          // Filtro de estado
+          // Filtro de estado (columna 9, no 8)
           if (filtroEstado) {
-            const estado = tds.eq(8).find('select').val();
+            const estado = tds.eq(9).find('select').val();
             if (estado !== filtroEstado) mostrar = false;
           }
           // Filtro de sucursal
@@ -842,11 +869,11 @@ $(document).ready(function() {
           }
           // Filtro de fechas (fecha y hora de ingreso)
           if (fechaDesde) {
-            const fecha = tds.eq(7).text().substring(0,10); // yyyy-mm-dd
+            const fecha = tds.eq(8).text().substring(0,10); // yyyy-mm-dd
             if (fecha < fechaDesde) mostrar = false;
           }
           if (fechaHasta) {
-            const fecha = tds.eq(7).text().substring(0,10); // yyyy-mm-dd
+            const fecha = tds.eq(8).text().substring(0,10); // yyyy-mm-dd
             if (fecha > fechaHasta) mostrar = false;
           }
           if (mostrar) {

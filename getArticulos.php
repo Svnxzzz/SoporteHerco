@@ -13,7 +13,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$sql = "SELECT id, articulo, sucursal, entregado_por, recibido_por, tecnico_reparo, n_serie, accesorio, condicion, fecha_hora, estado, fecha_entregado, fecha_descartado, nota, fallo FROM articulos ORDER BY fecha_hora ASC, id ASC";
+$sql = "SELECT id, articulo, sucursal, entregado_por, recibido_por, tecnico_reparo, n_serie, accesorio, condicion, fecha_hora, estado, fecha_entregado, fecha_descartado, nota, fallo, activo FROM articulos ORDER BY fecha_hora ASC, id ASC";
 $result = $conn->query($sql);
 
 $articulos = [];

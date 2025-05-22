@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispositivos Desactivados - Soporte Herco</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #fff; margin: 0; padding: 0; }
+    header { background: #b1b1b1; color: #fff; padding: 1rem 0; display: flex; justify-content: center; align-items: center; }
+    header .container { display: flex; justify-content: center; align-items: center; width: 100%; }
+    header h1 { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 0; font-size: 1.5rem; cursor: pointer; width: 100%; }
+    header h1 .logo { width: 200px; height: auto; display: block; margin: 0 auto; }
+    .volver-btn { margin: 30px 0 0 30px; padding: 12px 28px; background: #1565c0; color: #fff; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .volver-btn:hover { background: #42a5f5; }
+    .desactivados-section { max-width: 2000px; margin: 40px auto; background: #f8eaea; border-radius: 12px; padding: 24px 18px 18px 18px; box-shadow: 0 2px 12px #c0392b22; }
+    h2 { color: #c0392b; text-align: center; margin-bottom: 18px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; background: #fff; }
+    th, td { padding: 10px 8px; }
+    thead tr { background: #f2bcbc; }
+    button { color: white; background: #27ae60; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+    button.historial-btn { background: #1976d2; margin-bottom: 4px; }
+    @media (max-width: 900px) { .desactivados-section { padding: 10px 2vw; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>
+        <img src="imagenes/logo.png" class="logo" style="cursor:pointer;" onclick="window.location.href='index.html'">
+      </h1>
+    </div>
+  </header>
+  <button class="volver-btn" onclick="window.location.href='index.html'">&larr; Volver a dispositivos activos</button>
+  <section class="desactivados-section">
+    <h2>Dispositivos Desactivados</h2>
+    <div id="listadoDesactivados"></div>
+  </section>
+  <footer style="background:#1565c0;color:white;text-align:center;padding:10px;margin-top:50px;">
+    <p>&copy; 2025 Herco. All Rights Reserved.</p>
+  </footer>
+  <script>
+    $(document).ready(function () {
+      function loadDesactivados() {
+        $.ajax({
+          url: 'getArticulos.php',
+          method: 'GET',
+          dataType: 'json',
+          success: function (articulos) {
+            const desactivados = articulos.filter(a => String(a.activo) === '0' || a.activo === 0 || a.activo === false);
+            let html = '';
+            if (desactivados.length > 0) {
+              html += '<table><thead><tr><th>Dispositivo</th><th>N° de Serie</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Fecha y Hora</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+              desactivados.forEach(articulo => {
+                html += `<tr>
+                  <td>${articulo.articulo}</td>
+                  <td>${articulo.n_serie}</td>
+                  <td>${articulo.sucursal}</td>
+                  <td>${articulo.entregado_por}</td>
+                  <td>${articulo.recibido_por}</td>
+                  <td>${articulo.fecha_hora}</td>
+                  <td>${articulo.estado}</td>
+                  <td>
+                    <button class="historial-btn" data-id="${articulo.id}">Historial</button><br>
+                    <button class="activar-btn" data-id="${articulo.id}">Activar</button>
+                  </td>
+                </tr>`;
+              });
+              html += '</tbody></table>';
+            } else {
+              html = '<p style="text-align:center;">No hay dispositivos desactivados.</p>';
+            }
+            $('#listadoDesactivados').html(html);
+          },
+          error: function() {
+            $('#listadoDesactivados').html('<p style="color:red;">Error al cargar el listado.</p>');
+          }
+        });
+      }
+      loadDesactivados();
+      // Activar dispositivo
+      $(document).on('click', '.activar-btn', function() {
+        const id = $(this).data('id');
+        const usuario = localStorage.getItem('usuario') || '';
+        const nota = prompt('Ingrese una nota para el historial (opcional):') || '';
+        $.ajax({
+          url: 'historialEstado.php',
+          method: 'POST',
+          data: JSON.stringify({
+            id_articulo: id,
+            estado_anterior: 'inactivo',
+            estado_nuevo: 'activo',
+            usuario: usuario + (nota ? ' | Nota: ' + nota : '')
+          }),
+          contentType: 'application/json',
+          complete: function() {
+            $.ajax({
+              url: 'updateNota.php',
+              method: 'POST',
+              data: JSON.stringify({ id, activo: 1 }),
+              contentType: 'application/json',
+              complete: function() {
+                setTimeout(loadDesactivados, 200);
+              }
+            });
+          }
+        });
+      });
+      // Historial modal
+      $('body').append(`
+        <div id="historialModal" class="modal" style="display:none;z-index:2000;">
+          <div class="modal-content" style="max-width:600px;min-width:350px;">
+            <h2>Historial de Cambios de Estado</h2>
+            <div id="historialEstadosContent" style="width:100%;max-height:400px;overflow-y:auto;"></div>
+            <button id="cerrarHistorialModal" style="margin-top:18px;padding:10px 30px;background:#1565c0;color:#fff;border:none;border-radius:7px;font-size:1.1rem;cursor:pointer;">Cerrar</button>
+          </div>
+        </div>
+      `);
+      $(document).on('click', '.historial-btn', function() {
+        const id = $(this).data('id');
+        $('#historialEstadosContent').html('<p style="text-align:center;">Cargando...</p>');
+        $('#historialModal').css('display','flex');
+        $.ajax({
+          url: 'getHistorialEstados.php',
+          method: 'POST',
+          data: JSON.stringify({ id_articulo: id }),
+          contentType: 'application/json',
+          success: function(res) {
+            let html = '';
+            if (Array.isArray(res) && res.length > 0) {
+              html = '<table style="width:100%;border-collapse:collapse;font-size:1.01rem;">';
+              html += '<thead><tr style="background:#eee;"><th>Fecha y Hora</th><th>Estado Anterior</th><th>Estado Nuevo</th><th>Observacion</th></tr></thead><tbody>';
+              res.forEach(row => {
+                html += `<tr><td>${row.fecha_hora}</td><td>${row.estado_anterior}</td><td>${row.estado_nuevo}</td><td>${row.usuario}</td></tr>`;
+              });
+              html += '</tbody></table>';
+            } else {
+              html = '<p style="text-align:center;">Sin historial para este dispositivo.</p>';
+            }
+            $('#historialEstadosContent').html(html);
+          },
+          error: function() {
+            $('#historialEstadosContent').html('<p style="color:red;">Error al cargar historial.</p>');
+          }
+        });
+      });
+      $(document).on('click', '#cerrarHistorialModal', function() {
+        $('#historialModal').css('display','none');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -31,6 +31,12 @@ if (isset($data['nota'])) {
     $stmt->bind_param('si', $tecnico_reparo, $id);
     $ok = $stmt->execute();
     $stmt->close();
+} else if (isset($data['activo'])) {
+    $activo = $data['activo'] ? 1 : 0;
+    $stmt = $conn->prepare("UPDATE articulos SET activo=? WHERE id=?");
+    $stmt->bind_param('ii', $activo, $id);
+    $ok = $stmt->execute();
+    $stmt->close();
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Campo no soportado.']);
     $conn->close();
