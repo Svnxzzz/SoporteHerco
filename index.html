@@ -280,8 +280,8 @@
     <header>
   <div class="container" style="display:flex;justify-content:center;align-items:center;position:relative;width:100%;">
     <!-- Logo and Title -->
-    <h1 onclick="window.location.href='index.html'" style="margin:0 auto;">
-      <img src="imagenes/logo.png" class="logo">
+    <h1 style="margin:0 auto;">
+      <img src="imagenes/logo.png" class="logo" style="cursor:pointer;" onclick="window.location.href='index.html'">
     </h1>
     <div id="usuarioHeader" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:12px;">
       <span id="usuarioActual" style="font-weight:bold;color:#1565c0;"></span>
@@ -342,7 +342,7 @@
             <label for="articulo">Dispositivo</label>
             <input type="text" id="articulo" name="articulo" placeholder="Ej: Laptop Dell" required>
 
-            <label for="n_serie">N° de serie</label>
+            <label for="n_serie">N° de Serie o Asignacion</label>
             <input type="text" id="n_serie" name="n_serie" placeholder="Ej: SN123456" required>
 
             <label for="accesorio">Accesorio</label>
@@ -374,7 +374,7 @@
             <label for="entregado_por">Usuario  de Reporte</label>
             <input type="text" id="entregado_por" name="entregado_por" placeholder="Nombre completo" required>
 
-            <label for="recibido_por">Tecnico Responsable</label>
+            <label for="recibido_por">Responsable de Ingreso</label>
             <input type="text" id="recibido_por" name="recibido_por" placeholder="Nombre completo" required>
 
             <label for="fecha_hora">Fecha y Hora</label>
@@ -389,7 +389,7 @@
               <option value="descartado">Descartado</option>
             </select>
 
-            <label for="fallo">Fallo / Problema reportado</label>
+            <label for="fallo">Fallo / Problema Reportado</label>
             <input type="text" id="fallo" name="fallo" placeholder="Describa el problema" required>
           </div>
           <div style="flex-basis:100%;margin-top:10px;">
@@ -564,7 +564,7 @@ $(document).ready(function() {
             let html = '';
             if (articulos.length > 0) {
               html = '<table style="width:100%;border-collapse:collapse;text-align:left;">';
-              html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Tecnico Responsable</th><th>Técnico que reparó</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
+              html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie o Asignacion</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Técnico responsable en reparacion</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
               articulos.forEach(articulo => {
                 // Determinar si se debe deshabilitar la opción 'pendiente'
                 const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
@@ -606,6 +606,18 @@ $(document).ready(function() {
               html = '<p style="text-align:center;">No hay artículos registrados.</p>';
             }
             $('#listadoArticulos').html(html);
+
+            // Mostrar notificación de dispositivos vencidos (más de 3 días en pendiente o en proceso)
+            const hoy = new Date();
+            const dispositivosVencidos = articulos.filter(a => {
+              if (!a.fecha_hora) return false;
+              if (a.estado !== 'pendiente' && a.estado !== 'en proceso') return false;
+              let fechaIng = a.fecha_hora.includes('T') ? new Date(a.fecha_hora) : new Date(a.fecha_hora.replace(' ', 'T'));
+              if (isNaN(fechaIng.getTime())) return false;
+              const diffMs = hoy - fechaIng;
+              return diffMs > 3 * 24 * 60 * 60 * 1000;
+            });
+            mostrarNotificacionDispositivosVencidos(dispositivosVencidos);
 
             // Guardar el estado anterior al enfocar el select
             $('.estado-select').on('focus', function() {
@@ -861,8 +873,41 @@ $(document).ready(function() {
       $('#mostrarFiltrosAvanzados').on('click', function() {
         $('#panelFiltrosAvanzados').slideToggle(180);
       });
+
+      // Función para mostrar notificación de dispositivos vencidos
+      function mostrarNotificacionDispositivosVencidos(dispositivos) {
+        $('#notificacionDispositivosVencidos').remove();
+        if (!dispositivos.length) return;
+        let html = '<div id="notificacionDispositivosVencidos" style="position:fixed;top:0;left:0;z-index:999999;background:rgba(200,0,0,0.50);border:2.5px rgba(200,0,0,0.70);padding:22px 32px 18px 32px;border-radius:18px;box-shadow:0 6px 24px #0004;min-width:320px;max-width:420px;opacity:0;transform:translateY(-40px);transition:opacity 0.7s cubic-bezier(.4,0,.2,1),transform 0.7s cubic-bezier(.4,0,.2,1);pointer-events:auto;display:block !important;backdrop-filter:blur(1.5px);">';
+        html += '<strong style="color:#fff;font-size:1.15em;">⚠ Dispositivos con más de 3 días en soporte:</strong><ul style="margin:10px 0 0 18px;padding:0;font-size:1.05em;color:#fff;">';
+        dispositivos.forEach(d => {
+          html += `<li><b>${d.articulo}</b> (${d.n_serie}) - Ingresado: ${d.fecha_hora}</li>`;
+        });
+        html += '</ul>';
+        html += '<button onclick="$(\'#notificacionDispositivosVencidos\').fadeOut(300, function(){$(this).remove();});" style="margin-top:12px;padding:6px 18px;background:#a30000;color:#fff;border:none;border-radius:8px;cursor:pointer;">X</button>';
+        html += '</div>';
+        $('body').append(html);
+        setTimeout(function() {
+          $('#notificacionDispositivosVencidos').css({opacity:1, transform:'translateY(0)', display:'block'});
+        }, 200);
+      }
+
+      // MOVER el cálculo y despliegue de la notificación DENTRO de loadArticulos, después de renderizar la tabla:
+      // Después de $('#listadoArticulos').html(html); y antes de cerrar el success de loadArticulos:
+      const hoy = new Date();
+      const dispositivosVencidos = articulos.filter(a => {
+        if (!a.fecha_hora) return false;
+        if (a.estado !== 'pendiente' && a.estado !== 'en proceso') return false;
+        // Usar la fecha y hora de ingreso EXACTA del campo (puede venir como 'YYYY-MM-DDTHH:mm' o 'YYYY-MM-DD HH:mm')
+        let fechaIng = a.fecha_hora.includes('T') ? new Date(a.fecha_hora) : new Date(a.fecha_hora.replace(' ', 'T'));
+        if (isNaN(fechaIng.getTime())) return false;
+        const diffMs = hoy - fechaIng;
+        return diffMs > 3 * 24 * 60 * 60 * 1000; // más de 3 días
+      });
+      mostrarNotificacionDispositivosVencidos(dispositivosVencidos);
+
     });
-    </script>
+  </script>
   </body>
 <!--SC-->
 </html>
