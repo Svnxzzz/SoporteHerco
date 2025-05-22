@@ -634,6 +634,40 @@ $(document).ready(function() {
               }
               // Obtener la nota de la misma fila de la tabla
               const notaActual = select.closest('tr').find('.nota-input').val() || '';
+
+              // Si el nuevo estado es "en proceso", guardar el usuario logueado como técnico responsable
+              if (nuevoEstado === 'en proceso') {
+                const usuarioSesion = localStorage.getItem('usuario') || '';
+                $.when(
+                  $.ajax({
+                    url: 'historialEstado.php',
+                    method: 'POST',
+                    data: JSON.stringify({
+                      id_articulo: id,
+                      estado_anterior: estadoAnterior,
+                      estado_nuevo: nuevoEstado,
+                      usuario: notaActual
+                    }),
+                    contentType: 'application/json'
+                  }),
+                  $.ajax({
+                    url: 'updateEstado.php',
+                    method: 'POST',
+                    data: JSON.stringify({ id, estado: nuevoEstado }),
+                    contentType: 'application/json'
+                  }),
+                  $.ajax({
+                    url: 'updateNota.php',
+                    method: 'POST',
+                    data: JSON.stringify({ id, tecnico_reparo: usuarioSesion }),
+                    contentType: 'application/json'
+                  })
+                ).then(function() {
+                  loadArticulos();
+                });
+                return;
+              }
+
               // Guardar historial y actualizar estado, luego recargar lista solo cuando ambos terminen
               $.when(
                 $.ajax({
