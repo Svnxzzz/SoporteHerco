@@ -577,7 +577,7 @@ $(document).ready(function() {
                   <td>${articulo.entregado_por}</td>
                   <td>${articulo.recibido_por}</td>
                   <td>
-                    ${!articulo.tecnico_reparo || articulo.tecnico_reparo === '' ? `<input type="text" class="tecnico-reparo-input" data-id="${articulo.id}" placeholder="Nombre del técnico que reparó" style="width:95%;" />` : `<span>${articulo.tecnico_reparo}</span>`}
+                    ${articulo.tecnico_reparo && articulo.tecnico_reparo !== '' ? `<span>${articulo.tecnico_reparo}</span>` : ''}
                   </td>
                   <td>${articulo.fecha_hora}</td>
                   <td>
