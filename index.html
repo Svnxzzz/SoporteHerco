@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Soporte Herco</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Header Styles */
+    header {
+      background: #b1b1b1;
+      color: #fff;
+      padding: 1rem 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    header .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    header h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    header h1 .logo {
+      width: 200px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Main Content */
+    .articulo-Form {
+      max-width: 2000px;
+      margin: 30px auto;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .articulo-Form h2 {
+      text-align: center;
+      color: #1565c0; /* Azul fuerte */
+    }
+
+    .articulo-Form label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+      border-radius: 5px;
+    }
+
+    .articulo-Form input,
+    .articulo-Form select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1.1rem;
+    }
+
+    .articulo-Form button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 25px;
+      background-color: #1565c0; /* Azul fuerte */
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1.1rem;
+    }
+
+    .articulo-Form button:hover {
+      background-color: #42a5f5; /* Azul claro */
+      color: #fff;
+    }
+
+    #responseMessage {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    /* Footer Styles */
+    footer {
+      background-color: #1565c0; /* Azul fuerte */
+      color: white;
+      text-align: center;
+      padding: 10px;
+      margin-top: 50px;
+    }
+
+    #listadoArticulos table {
+      font-size: 1.08rem;
+    }
+    #listadoArticulos th, #listadoArticulos td {
+      padding: 10px 8px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none; /* Oculto por defecto */
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 32px 48px 32px 48px;
+      border-radius: 18px;
+      min-width: 700px;
+      max-width: 900px;
+      box-shadow: 0 0 18px rgba(0,0,0,0.10);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #e3e3e3;
+    }
+    @media (max-width: 900px) {
+      .modal-content {
+        min-width: 98vw;
+        max-width: 99vw;
+        padding: 12px 2vw;
+      }
+      .modal-content .form-col {
+        min-width: 120px;
+      }
+    }
+    .modal-content form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px 40px;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .modal-content .form-col {
+      flex: 1 1 45%;
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-content h2 {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #1565c0;
+      letter-spacing: 0.5px;
+    }
+    /* Eliminar botón de cierre visual */
+    .close-modal-btn {
+      display: none !important;
+    }
+    .open-modal-btn {
+      display: block;
+      margin: 30px auto 0 auto;
+      padding: 15px 40px;
+      background: #1565c0;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .open-modal-btn:hover {
+      background: #42a5f5;
+    }
+    /* Inputs y selects uniformes */
+    .modal-content input,
+    .modal-content select {
+      width: 100%;
+      padding: 13px 14px;
+      margin-top: 4px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 1.08rem;
+      background: #fafbfc;
+      transition: border 0.2s;
+      box-sizing: border-box;
+    }
+    .modal-content input:focus,
+    .modal-content select:focus {
+      border: 1.5px solid #1565c0;
+      outline: none;
+      background: #fff;
+    }
+    .modal-content label {
+      font-weight: 600;
+      margin-top: 8px;
+      margin-bottom: 2px;
+      font-size: 1.04rem;
+      color: #222;
+    }
+    .modal-content button[type="submit"] {
+      width: 100%;
+      padding: 18px 0;
+      margin-top: 18px;
+      background-color: #1565c0;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.18rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(21,101,192,0.07);
+      transition: background 0.2s;
+    }
+    .modal-content button[type="submit"]:hover {
+      background-color: #1976d2;
+    }
+    /* Espaciado entre columnas y botón */
+    .modal-content form > div[style*="flex-basis:100%"] {
+      margin-top: 10px;
+    }
+    /* Responsive para columnas */
+    @media (max-width: 700px) {
+      .modal-content form {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal-content .form-col {
+        min-width: 100%;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="loginContainer" style="display:none;max-width:400px;margin:60px auto 0 auto;padding:32px 24px;background:#f5f5f5;border-radius:10px;box-shadow:0 2px 12px #0001;">
+    <h2 style="text-align:center;color:#1565c0;">Iniciar Sesión</h2>
+    <form id="loginForm">
+      <label for="loginUsuario">Usuario</label>
+      <input type="text" id="loginUsuario" name="loginUsuario" required style="width:100%;padding:10px;margin-bottom:10px;">
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" name="loginPassword" required style="width:100%;padding:10px;margin-bottom:18px;">
+      <button type="submit" style="width:100%;padding:12px;background:#1565c0;color:#fff;font-weight:bold;border:none;border-radius:7px;font-size:1.1rem;">Entrar</button>
+    </form>
+    <div id="loginError" style="color:red;text-align:center;margin-top:10px;"></div>
+  </div>
+  <div id="appContainer" style="display:none;">
+    <header>
+  <div class="container" style="display:flex;justify-content:center;align-items:center;position:relative;width:100%;">
+    <!-- Logo and Title -->
+    <h1 onclick="window.location.href='index.html'" style="margin:0 auto;">
+      <img src="imagenes/logo.png" class="logo">
+    </h1>
+    <div id="usuarioHeader" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:12px;">
+      <span id="usuarioActual" style="font-weight:bold;color:#1565c0;"></span>
+      <button id="logoutBtn" style="padding:6px 18px;background:#c0392b;color:#fff;border:none;border-radius:6px;cursor:pointer;">Cerrar sesión</button>
+    </div>
+  </div>
+</header>
+
+  <main>
+    <button class="open-modal-btn" id="openSoporteModal">Agregar Dispositivo a soporte</button>
+    <section class="articulo-Form">
+      <h2>Listado de Dispositivos en Soporte</h2>
+      <div class="filtros-bar" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 18px; width: 100%;">
+        <button id="mostrarFiltrosAvanzados" style="padding:12px 18px;background:#1976d2;color:#fff;border:none;border-radius:7px;font-size:1.08rem;cursor:pointer;">Filtros avanzados</button>
+        <label>Buscar: </label>
+        <input type="text" id="busquedaArticulos" placeholder="Dispositivo, serie, usuario, estado, fallo..." style="padding: 10px 14px; font-size: 1.08rem; border: 1.5px solid #bdbdbd; border-radius: 7px; width: 210px; max-width: 100%;">
+      </div>
+      <div id="panelFiltrosAvanzados" style="display:none;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px;margin-top:10px;flex-direction:row;width:100%;">
+        <div style="display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;width:100%;">
+          <label style="margin:0 4px 0 0;white-space:nowrap;">Estado:</label>
+          <select id="filtroEstado" style="padding:6px 10px;border-radius:7px;width:auto;">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en proceso">En proceso</option>
+            <option value="terminado">Terminado</option>
+            <option value="entregado">Entregado</option>
+            <option value="descartado">Descartado</option>
+          </select>
+          <label style="margin:0 4px 0 12px;white-space:nowrap;">Sucursal:</label>
+          <select id="filtroSucursal" style="padding:6px 10px;border-radius:7px;width:auto;">
+            <option value="">Todas</option>
+            <option value="Herco Panamericana">Herco Panamericana</option>
+            <option value="Herco Centro">Herco Centro</option>
+            <option value="Herco San Lorenzo">Herco San Lorenzo</option>
+            <option value="Distrito CDC">Distrito CDC</option>
+            <option value="CD Ferretero">CD Ferretero</option>
+            <option value="Distribucion">Distribucion</option>
+            <option value="Distrito Miramontes">Distrito Miramontes</option>
+            <option value="Herco Juticalpa">Herco Juticalpa</option>
+            <option value="Herco Champañal">Herco Champañal</option>
+            <option value="Bodega Los Graneros">Bodega Los Graneros</option>
+          </select>
+          <label style="margin:0 4px 0 12px;white-space:nowrap;">Técnico:</label>
+          <input type="text" id="filtroTecnico" placeholder="Técnico..." style="padding:6px 10px;border-radius:7px;width:110px;">
+          <label style="margin:0 4px 0 12px;white-space:nowrap;">Fecha:</label>
+          <input type="date" id="filtroFechaDesde" style="padding:6px 10px;border-radius:7px;width:auto;">
+          <span style="font-size:1.1em;margin:0 4px;">a</span>
+          <input type="date" id="filtroFechaHasta" style="padding:6px 10px;border-radius:7px;width:auto;">
+        </div>
+      </div>
+      <div id="listadoArticulos"></div>
+    </section>
+    <div id="soporteModal" class="modal">
+      <div class="modal-content">
+        <h2>Registro de Dispositivo en Soporte</h2>
+        <form id="articuloForm">
+          <div class="form-col">
+            <label for="articulo">Dispositivo</label>
+            <input type="text" id="articulo" name="articulo" placeholder="Ej: Laptop Dell" required>
+
+            <label for="n_serie">N° de serie</label>
+            <input type="text" id="n_serie" name="n_serie" placeholder="Ej: SN123456" required>
+
+            <label for="accesorio">Accesorio</label>
+            <input type="text" id="accesorio" name="accesorio" placeholder="Ej: Cargador, Mouse" required>
+
+            <label for="condicion">Condición</label>
+            <select id="condicion" name="condicion" required>
+              <option value="Nuevo">Nuevo</option>
+              <option value="En uso" selected>En uso</option>
+            </select>
+
+            <label for="sucursal">Sucursal</label>
+            <select id="sucursal" name="sucursal" required>
+              <option value="">Seleccione una sucursal</option>
+              <option value="Herco Panamericana">Herco Panamericana</option>
+              <option value="Herco Centro">Herco Centro</option>
+              <option value="Herco San Lorenzo">Herco San Lorenzo</option>
+              <option value="Distrito CDC">Distrito CDC</option>
+              <option value="CD Ferretero">CD Ferretero</option>
+              <option value="Distribucion">Distribucion</option>
+              <option value="Distrito Miramontes">Distrito Miramontes</option>
+              <option value="Herco Juticalpa">Herco Juticalpa</option>
+              <option value="Herco Champañal">Herco Champañal</option>
+              <option value="Bodega Los Graneros">Bodega Los Graneros</option>
+            </select>
+
+          </div>
+          <div class="form-col">
+            <label for="entregado_por">Usuario  de Reporte</label>
+            <input type="text" id="entregado_por" name="entregado_por" placeholder="Nombre completo" required>
+
+            <label for="recibido_por">Tecnico Responsable</label>
+            <input type="text" id="recibido_por" name="recibido_por" placeholder="Nombre completo" required>
+
+            <label for="fecha_hora">Fecha y Hora</label>
+            <input type="datetime-local" id="fecha_hora" name="fecha_hora" required>
+
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado" required>
+              <option value="pendiente">Pendiente</option>
+              <option value="en proceso">En proceso</option>
+              <option value="terminado">Terminado</option>
+              <option value="entregado">Entregado</option>
+              <option value="descartado">Descartado</option>
+            </select>
+
+            <label for="fallo">Fallo / Problema reportado</label>
+            <input type="text" id="fallo" name="fallo" placeholder="Describa el problema" required>
+          </div>
+          <div style="flex-basis:100%;margin-top:10px;">
+            <button type="submit">Registrar Dispositivo</button>
+          </div>
+        </form>
+        <div id="responseMessage"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Herco. All Rights Reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // --- LOGIN ---
+function mostrarLogin() {
+  $('#loginContainer').show();
+  $('#appContainer').hide();
+}
+function mostrarApp(usuario) {
+  $('#loginContainer').hide();
+  $('#appContainer').show();
+  $('#usuarioActual').text('Usuario: ' + usuario);
+  $('#usuarioHeader').show();
+}
+function checkSession() {
+  const usuario = localStorage.getItem('usuario');
+  if (usuario) {
+    mostrarApp(usuario);
+  } else {
+    mostrarLogin();
+  }
+}
+$(document).ready(function() {
+  checkSession();
+  $('#loginForm').on('submit', function(e) {
+    e.preventDefault();
+    const usuario = $('#loginUsuario').val();
+    const password = $('#loginPassword').val();
+    $.ajax({
+      url: 'login.php',
+      method: 'POST',
+      data: JSON.stringify({ usuario, password }),
+      contentType: 'application/json',
+      success: function(res) {
+        if (typeof res === 'string') {
+          try { res = JSON.parse(res); } catch (e) { res = {}; }
+        }
+        if (res.status === 'success') {
+          localStorage.setItem('usuario', res.usuario);
+          mostrarApp(res.usuario);
+        } else {
+          $('#loginError').text(res.message || 'Error de login');
+        }
+      },
+      error: function() {
+        $('#loginError').text('Error de conexión.');
+      }
+    });
+  });
+  $('#logoutBtn').on('click', function() {
+    localStorage.removeItem('usuario');
+    $.ajax({ url: 'logout.php', method: 'POST', complete: function() { mostrarLogin(); } });
+  });
+});
+
+    $(document).ready(function () {
+      // Modal abrir/cerrar
+      $('#openSoporteModal').on('click', function() {
+        $('#soporteModal').css('display', 'flex'); // Mostrar modal centrado
+        // Autocompletar el campo Tecnico Responsable con el usuario logueado y deshabilitarlo
+        const usuario = localStorage.getItem('usuario') || '';
+        $('#recibido_por').val(usuario).prop('disabled', true);
+      });
+      $('#closeSoporteModal').on('click', function() {
+        $('#soporteModal').css('display', 'none');
+        $('#articuloForm')[0].reset();
+        $('#recibido_por').prop('disabled', false);
+      });
+      // Cerrar modal al hacer click fuera del contenido
+      $('#soporteModal').on('click', function(e) {
+        if (e.target === this) {
+          $(this).css('display', 'none');
+          $('#articuloForm')[0].reset();
+          $('#recibido_por').prop('disabled', false);
+        }
+      });
+      
+      // Manejar el envío del formulario de artículo
+      $('#articuloForm').on('submit', function (e) {
+        e.preventDefault();
+        const usuario = localStorage.getItem('usuario') || '';
+        const formData = {
+          articulo: $('#articulo').val(),
+          sucursal: $('#sucursal').val(),
+          entregado_por: $('#entregado_por').val(),
+          recibido_por: usuario,
+          n_serie: $('#n_serie').val(),
+          accesorio: $('#accesorio').val(),
+          condicion: $('#condicion').val(),
+          fecha_hora: $('#fecha_hora').val(),
+          estado: $('#estado').val(),
+          fallo: $('#fallo').val()
+        };
+
+         $.ajax({
+          url: 'registrarArticulo.php',
+          method: 'POST',
+          data: JSON.stringify(formData),
+          contentType: 'application/json',
+            success: function (response) {
+            // Limpia espacios, saltos y BOM
+            if (typeof response === 'string') {
+              response = response.replace(/^\uFEFF/, '').trim();
+            }
+            let res;
+            try {
+              // Intenta extraer el primer objeto JSON válido de la respuesta
+              const match = response.match(/{.*}/s);
+              if (match) {
+                res = JSON.parse(match[0]);
+              } else {
+                throw new Error('No se encontró JSON válido en la respuesta');
+              }
+            } catch (e) {
+              alert('ARCHIVOS GUARDADOS, RECARGUE PAGINA.');
+              location.reload();
+              return;
+            }
+            if (res.status === 'success') {
+              $('#articuloForm')[0].reset();
+            } else {
+              alert(res.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Error de conexión o del servidor.');
+          }
+        });
+      });
+
+
+      // Función para cargar el listado de artículos
+      function loadArticulos() {
+        $.ajax({
+          url: 'getArticulos.php',
+          method: 'GET',
+          dataType: 'json',
+          success: function (articulos) {
+            // Ordenar los artículos según el estado y la fecha
+            articulos.sort(function(a, b) {
+              // Definir prioridad de estado
+              const estadoOrden = {
+                'en proceso': 1,
+                'pendiente': 2,
+                'terminado': 3,
+                'entregado': 4,
+                'descartado': 5
+              };
+              // Primero por estado
+              const estadoA = estadoOrden[a.estado] || 99;
+              const estadoB = estadoOrden[b.estado] || 99;
+              if (estadoA !== estadoB) return estadoA - estadoB;
+              // Si el estado es igual, ordenar por fecha (más vieja primero)
+              const fechaA = new Date(a.fecha_hora);
+              const fechaB = new Date(b.fecha_hora);
+              return fechaA - fechaB;
+            });
+            let html = '';
+            if (articulos.length > 0) {
+              html = '<table style="width:100%;border-collapse:collapse;text-align:left;">';
+              html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Tecnico Responsable</th><th>Técnico que reparó</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
+              articulos.forEach(articulo => {
+                // Determinar si se debe deshabilitar la opción 'pendiente'
+                const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
+                html += `<tr>
+                  <td>${articulo.articulo}</td>
+                  <td>${articulo.n_serie}</td>
+                  <td>${articulo.accesorio}</td>
+                  <td>${articulo.condicion}</td>
+                  <td>${articulo.sucursal}</td>
+                  <td>${articulo.entregado_por}</td>
+                  <td>${articulo.recibido_por}</td>
+                  <td>
+                    ${!articulo.tecnico_reparo || articulo.tecnico_reparo === '' ? `<input type="text" class="tecnico-reparo-input" data-id="${articulo.id}" placeholder="Nombre del técnico que reparó" style="width:95%;" />` : `<span>${articulo.tecnico_reparo}</span>`}
+                  </td>
+                  <td>${articulo.fecha_hora}</td>
+                  <td>
+                    <select class="estado-select" data-id="${articulo.id}">
+                      <option value="pendiente" ${articulo.estado === 'pendiente' ? 'selected' : ''} ${disablePendiente}>Pendiente</option>
+                      <option value="en proceso" ${articulo.estado === 'en proceso' ? 'selected' : ''}>En proceso</option>
+                      <option value="terminado" ${articulo.estado === 'terminado' ? 'selected' : ''}>Terminado</option>
+                      <option value="entregado" ${articulo.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
+                      <option value="descartado" ${articulo.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
+                    </select>
+                  </td>
+                  <td>${articulo.fallo || ''}</td>
+                  <td>${articulo.fecha_entregado ? articulo.fecha_entregado : ''}</td>
+                  <td>${articulo.fecha_descartado ? articulo.fecha_descartado : ''}</td>
+                  <td>
+                    <input type="text" class="nota-input" data-id="${articulo.id}" value="${articulo.nota ? articulo.nota.replace(/\"/g, '&quot;') : ''}" placeholder="Agregar nota..." style="width:95%;" ${(articulo.estado === 'en proceso' || articulo.estado === 'terminado') ? '' : 'disabled'} />
+                  </td>
+                  <td>
+                    <button class="ver-historial-btn" data-id="${articulo.id}" style="background:#1976d2;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;margin-bottom:4px;">Historial</button><br>
+                    <button class="delete-btn" data-id="${articulo.id}" style="color:white;background:#c0392b;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">Eliminar</button>
+                  </td>
+                </tr>`;
+              });
+              html += '</tbody></table>';
+            } else {
+              html = '<p style="text-align:center;">No hay artículos registrados.</p>';
+            }
+            $('#listadoArticulos').html(html);
+
+            // Guardar el estado anterior al enfocar el select
+            $('.estado-select').on('focus', function() {
+              $(this).data('estado-anterior', $(this).val());
+            });
+            // Evento para cambiar estado
+            $('.estado-select').on('change', function() {
+              const id = $(this).data('id');
+              const select = $(this);
+              const estadoAnterior = select.data('estado-anterior');
+              const nuevoEstado = select.val();
+              if (['entregado', 'descartado', 'en proceso', 'terminado'].includes(nuevoEstado)) {
+                select.find('option[value="pendiente"]').prop('disabled', true);
+              }
+              // Obtener la nota de la misma fila de la tabla
+              const notaActual = select.closest('tr').find('.nota-input').val() || '';
+              // Guardar historial y actualizar estado, luego recargar lista solo cuando ambos terminen
+              $.when(
+                $.ajax({
+                  url: 'historialEstado.php',
+                  method: 'POST',
+                  data: JSON.stringify({
+                    id_articulo: id,
+                    estado_anterior: estadoAnterior,
+                    estado_nuevo: nuevoEstado,
+                    usuario: notaActual
+                  }),
+                  contentType: 'application/json'
+                }),
+                $.ajax({
+                  url: 'updateEstado.php',
+                  method: 'POST',
+                  data: JSON.stringify({ id, estado: nuevoEstado }),
+                  contentType: 'application/json'
+                })
+              ).then(function() {
+                loadArticulos();
+              });
+            });
+
+            // Evento para editar nota
+            $('.nota-input').on('change', function() {
+              const id = $(this).data('id');
+              const nota = $(this).val();
+              $.ajax({
+                url: 'updateNota.php',
+                method: 'POST',
+                data: JSON.stringify({ id, nota }),
+                contentType: 'application/json',
+                success: function() {
+                  // Opcional: feedback visual
+                }
+              });
+            });
+            // Guardar nota al presionar Enter
+            $('.nota-input').on('keydown', function(e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                $(this).trigger('change');
+                $(this).blur();
+              }
+            });
+
+            // Evento para guardar técnico que reparó
+            $('.tecnico-reparo-input').on('keydown', function(e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                $(this).trigger('blur');
+              }
+            });
+            $('.tecnico-reparo-input').on('blur', function() {
+              const input = $(this);
+              const id = input.data('id');
+              const tecnico_reparo = input.val().trim();
+              if (tecnico_reparo !== '') {
+                $.ajax({
+                  url: 'updateNota.php',
+                  method: 'POST',
+                  data: JSON.stringify({ id, tecnico_reparo }),
+                  contentType: 'application/json',
+                  success: function(res) {
+                    // Si se guardó correctamente, reemplazar input por texto plano
+                    if (typeof res === 'string') {
+                      try { res = JSON.parse(res); } catch (e) { res = {}; }
+                    }
+                    if (res.status === 'success') {
+                      input.replaceWith(`<span>${tecnico_reparo}</span>`);
+                    } else {
+                      alert('No se pudo guardar el técnico.');
+                    }
+                  },
+                  error: function() {
+                    alert('Error al guardar el técnico.');
+                  }
+                });
+              }
+            });
+
+            // Evento para eliminar
+            $('.delete-btn').on('click', function() {
+              if (confirm('¿Seguro que deseas eliminar este artículo?')) {
+                const id = $(this).data('id');
+                $.ajax({
+                  url: 'deleteArticulo.php',
+                  method: 'POST',
+                  data: JSON.stringify({ id }),
+                  contentType: 'application/json',
+                  success: function() {
+                    loadArticulos();
+                  }
+                });
+              }
+            });
+          },
+          error: function(xhr, status, error) {
+            $('#listadoArticulos').html('<p style="color:red;">Error al cargar el listado.</p>');
+          }
+        });
+      }
+
+      loadArticulos();
+
+      // --- Búsqueda en la tabla de artículos ---
+      $(document).on('input', '#busquedaArticulos', function() {
+        const filtro = $(this).val().toLowerCase();
+        // Siempre mostrar el encabezado
+        $('#listadoArticulos table thead tr').show();
+        $('#listadoArticulos table tbody tr').each(function() {
+          let texto = '';
+          // Concatenar el texto de todas las celdas, incluyendo selects y inputs
+          $(this).find('td').each(function() {
+            if ($(this).find('select').length) {
+              texto += $(this).find('select option:selected').text().toLowerCase() + ' ';
+            } else if ($(this).find('input').length) {
+              texto += $(this).find('input').val().toLowerCase() + ' ';
+            } else {
+              texto += $(this).text().toLowerCase() + ' ';
+            }
+          });
+          if (texto.indexOf(filtro) > -1) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+      });
+
+      // --- Filtros avanzados en la tabla de artículos ---
+      function aplicarFiltros() {
+        const filtroTexto = $('#busquedaArticulos').val().toLowerCase();
+        const filtroEstado = $('#filtroEstado').val();
+        const filtroSucursal = $('#filtroSucursal').val().toLowerCase();
+        const filtroTecnico = $('#filtroTecnico').val().toLowerCase();
+        const fechaDesde = $('#filtroFechaDesde').val();
+        const fechaHasta = $('#filtroFechaHasta').val();
+
+        $('#listadoArticulos table thead tr').show();
+        $('#listadoArticulos table tbody tr').each(function() {
+          let mostrar = true;
+          let texto = '';
+          let tds = $(this).find('td');
+          // Concatenar el texto de todas las celdas para búsqueda general
+          tds.each(function() {
+            if ($(this).find('select').length) {
+              texto += $(this).find('select option:selected').text().toLowerCase() + ' ';
+            } else if ($(this).find('input').length) {
+              texto += $(this).find('input').val().toLowerCase() + ' ';
+            } else {
+              texto += $(this).text().toLowerCase() + ' ';
+            }
+          });
+          // Filtro de texto general
+          if (filtroTexto && texto.indexOf(filtroTexto) === -1) mostrar = false;
+          // Filtro de estado
+          if (filtroEstado) {
+            const estado = tds.eq(8).find('select').val();
+            if (estado !== filtroEstado) mostrar = false;
+          }
+          // Filtro de sucursal
+          if (filtroSucursal) {
+            const sucursal = tds.eq(4).text().toLowerCase();
+            if (sucursal !== filtroSucursal) mostrar = false;
+          }
+          // Filtro de técnico responsable
+          if (filtroTecnico) {
+            const tecnico = tds.eq(6).text().toLowerCase();
+            if (tecnico.indexOf(filtroTecnico) === -1) mostrar = false;
+          }
+          // Filtro de fechas (fecha y hora de ingreso)
+          if (fechaDesde) {
+            const fecha = tds.eq(7).text().substring(0,10); // yyyy-mm-dd
+            if (fecha < fechaDesde) mostrar = false;
+          }
+          if (fechaHasta) {
+            const fecha = tds.eq(7).text().substring(0,10); // yyyy-mm-dd
+            if (fecha > fechaHasta) mostrar = false;
+          }
+          if (mostrar) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+      }
+      // Eventos de los filtros
+      $(document).on('input change', '#busquedaArticulos, #filtroEstado, #filtroSucursal, #filtroTecnico, #filtroFechaDesde, #filtroFechaHasta', aplicarFiltros);
+
+      // Mostrar historial de cambios de estado en un modal
+      $('body').append(`
+        <div id="historialModal" class="modal" style="display:none;z-index:2000;">
+          <div class="modal-content" style="max-width:600px;min-width:350px;">
+            <h2>Historial de Cambios de Estado</h2>
+            <div id="historialEstadosContent" style="width:100%;max-height:400px;overflow-y:auto;"></div>
+            <button id="cerrarHistorialModal" style="margin-top:18px;padding:10px 30px;background:#1565c0;color:#fff;border:none;border-radius:7px;font-size:1.1rem;cursor:pointer;">Cerrar</button>
+          </div>
+        </div>
+      `);
+
+      // Botón para ver historial en cada fila
+      $(document).on('click', '.ver-historial-btn', function() {
+        const id = $(this).data('id');
+        $('#historialEstadosContent').html('<p style="text-align:center;">Cargando...</p>');
+        $('#historialModal').css('display','flex');
+        $.ajax({
+          url: 'getHistorialEstados.php',
+          method: 'POST',
+          data: JSON.stringify({ id_articulo: id }),
+          contentType: 'application/json',
+          success: function(res) {
+            let html = '';
+            if (Array.isArray(res) && res.length > 0) {
+              html = '<table style="width:100%;border-collapse:collapse;font-size:1.01rem;">';
+              html += '<thead><tr style="background:#eee;"><th>Fecha y Hora</th><th>Estado Anterior</th><th>Estado Nuevo</th><th>Observacion</th></tr></thead><tbody>';
+              res.forEach(row => {
+                html += `<tr><td>${row.fecha_hora}</td><td>${row.estado_anterior}</td><td>${row.estado_nuevo}</td><td>${row.usuario}</td></tr>`;
+              });
+              html += '</tbody></table>';
+            } else {
+              html = '<p style="text-align:center;">Sin historial para este dispositivo.</p>';
+            }
+            $('#historialEstadosContent').html(html);
+          },
+          error: function() {
+            $('#historialEstadosContent').html('<p style="color:red;">Error al cargar historial.</p>');
+          }
+        });
+      });
+      $('#cerrarHistorialModal').on('click', function() {
+        $('#historialModal').css('display','none');
+      });
+
+      // Mostrar/ocultar panel de filtros avanzados
+      $('#mostrarFiltrosAvanzados').on('click', function() {
+        $('#panelFiltrosAvanzados').slideToggle(180);
+      });
+    });
+    </script>
+</body>
+</html>
