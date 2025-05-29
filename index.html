@@ -572,7 +572,28 @@ $(document).ready(function() {
               activos.forEach(articulo => {
                 // Determinar si se debe deshabilitar la opción 'pendiente'
                 const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
-                html += `<tr>
+                // Color de fila según estado
+                let estadoColor = '';
+                switch (articulo.estado) {
+                  case 'pendiente':
+                    estadoColor = 'background:#ff9800;color:#fff;'; // naranja
+                    break;
+                  case 'en proceso':
+                    estadoColor = 'background:#ffe082;color:#222;'; // amarillo
+                    break;
+                  case 'terminado':
+                    estadoColor = 'background:#1976d2;color:#fff;'; // azul
+                    break;
+                  case 'entregado':
+                    estadoColor = 'background:#43a047;color:#fff;'; // verde
+                    break;
+                  case 'descartado':
+                    estadoColor = 'background:#e53935;color:#fff;'; // rojo
+                    break;
+                  default:
+                    estadoColor = '';
+                }
+                html += `<tr style="${estadoColor}">
                   <td>${articulo.articulo}</td>
                   <td>${articulo.n_serie}</td>
                   <td>${articulo.accesorio}</td>
