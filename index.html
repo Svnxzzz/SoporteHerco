@@ -969,6 +969,16 @@ $(document).ready(function() {
 
     });
   </script>
+  <script>
+    window.addEventListener('unload', function(e) {
+  if (!window.performance || performance.navigation.type !== 1) { // 1 = reload
+    localStorage.removeItem('usuario');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'logout.php', false);
+    xhr.send(null);
+  }
+});
+  </script>
   </body>
 <!--SC-->
 </html>
