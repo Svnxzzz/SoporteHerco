@@ -264,6 +264,7 @@
 
   </style>
 </head>
+
 <body>
   <div id="loginContainer" style="display:none;max-width:400px;margin:60px auto 0 auto;padding:32px 24px;background:#f5f5f5;border-radius:10px;box-shadow:0 2px 12px #0001;">
     <h2 style="text-align:center;color:#1565c0;">Iniciar Sesión</h2>
@@ -277,6 +278,8 @@
     <div id="loginError" style="color:red;text-align:center;margin-top:10px;"></div>
   </div>
   <div id="appContainer" style="display:none;">
+    
+    
     <header>
   <div class="container" style="display:flex;justify-content:center;align-items:center;position:relative;width:100%;">
     <!-- Logo and Title -->
@@ -409,56 +412,56 @@
   <!-- Scripts -->
   <script>
     // --- LOGIN ---
-function mostrarLogin() {
-  $('#loginContainer').show();
-  $('#appContainer').hide();
-}
-function mostrarApp(usuario) {
-  $('#loginContainer').hide();
-  $('#appContainer').show();
-  $('#usuarioActual').text('Usuario: ' + usuario);
-  $('#usuarioHeader').show();
-}
-function checkSession() {
-  const usuario = localStorage.getItem('usuario');
-  if (usuario) {
-    mostrarApp(usuario);
-  } else {
-    mostrarLogin();
-  }
-}
-$(document).ready(function() {
-  checkSession();
-  $('#loginForm').on('submit', function(e) {
-    e.preventDefault();
-    const usuario = $('#loginUsuario').val();
-    const password = $('#loginPassword').val();
-    $.ajax({
-      url: 'login.php',
-      method: 'POST',
-      data: JSON.stringify({ usuario, password }),
-      contentType: 'application/json',
-      success: function(res) {
-        if (typeof res === 'string') {
-          try { res = JSON.parse(res); } catch (e) { res = {}; }
-        }
-        if (res.status === 'success') {
-          localStorage.setItem('usuario', res.usuario);
-          mostrarApp(res.usuario);
-        } else {
-          $('#loginError').text(res.message || 'Error de login');
-        }
-      },
-      error: function() {
-        $('#loginError').text('Error de conexión.');
+      function mostrarLogin() {
+        $('#loginContainer').show();
+        $('#appContainer').hide();
       }
-    });
-  });
-  $('#logoutBtn').on('click', function() {
-    localStorage.removeItem('usuario');
-    $.ajax({ url: 'logout.php', method: 'POST', complete: function() { mostrarLogin(); } });
-  });
-});
+      function mostrarApp(usuario) {
+        $('#loginContainer').hide();
+        $('#appContainer').show();
+        $('#usuarioActual').text('Usuario: ' + usuario);
+        $('#usuarioHeader').show();
+      }
+      function checkSession() {
+        const usuario = localStorage.getItem('usuario');
+        if (usuario) {
+          mostrarApp(usuario);
+        } else {
+          mostrarLogin();
+        }
+      }
+      $(document).ready(function() {
+        checkSession();
+        $('#loginForm').on('submit', function(e) {
+          e.preventDefault();
+          const usuario = $('#loginUsuario').val();
+          const password = $('#loginPassword').val();
+          $.ajax({
+            url: 'login.php',
+            method: 'POST',
+            data: JSON.stringify({ usuario, password }),
+            contentType: 'application/json',
+            success: function(res) {
+              if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch (e) { res = {}; }
+              }
+              if (res.status === 'success') {
+                localStorage.setItem('usuario', res.usuario);
+                mostrarApp(res.usuario);
+              } else {
+                $('#loginError').text(res.message || 'Error de login');
+              }
+            },
+            error: function() {
+              $('#loginError').text('Error de conexión.');
+            }
+          });
+        });
+        $('#logoutBtn').on('click', function() {
+          localStorage.removeItem('usuario');
+          $.ajax({ url: 'logout.php', method: 'POST', complete: function() { mostrarLogin(); } });
+        });
+      });
 
     $(document).ready(function () {
       // Modal abrir/cerrar
@@ -562,72 +565,82 @@ $(document).ready(function() {
               const fechaB = new Date(b.fecha_hora);
               return fechaA - fechaB;
             });
-            let html = '';
-            // Filtrar activos y desactivados (corregido: solo 1 es activo)
+            // --- AGRUPAR POR ESTADO Y MOSTRAR CADA LISTA ---
+            // Definir los estados y su orden
+            const estadosOrden = [
+              'en proceso',
+              'pendiente',
+              'terminado',
+              'entregado',
+              'descartado'
+            ];
+            // Filtrar activos
             const activos = articulos.filter(a => String(a.activo) === '1' || a.activo === 1 || a.activo === true);
-            // const desactivados = articulos.filter(a => String(a.activo) === '0' || a.activo === 0 || a.activo === false); // Ya no se usa aquí
-            if (activos.length > 0) {
-              html = '<table style="width:100%;border-collapse:collapse;text-align:left;">';
-              html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie o Asignacion</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Técnico responsable en reparacion</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
-              activos.forEach(articulo => {
-                // Determinar si se debe deshabilitar la opción 'pendiente'
-                const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
-                // Color de fila según estado
-                let estadoColor = '';
-                switch (articulo.estado) {
-                  case 'pendiente':
-                    estadoColor = 'background:#ff9800;color:#fff;'; // naranja
-                    break;
-                  case 'en proceso':
-                    estadoColor = 'background:#ffe082;color:#222;'; // amarillo
-                    break;
-                  case 'terminado':
-                    estadoColor = 'background:#1976d2;color:#fff;'; // azul
-                    break;
-                  case 'entregado':
-                    estadoColor = 'background:#43a047;color:#fff;'; // verde
-                    break;
-                  case 'descartado':
-                    estadoColor = 'background:#e53935;color:#fff;'; // rojo
-                    break;
-                  default:
-                    estadoColor = '';
+            let html = '';
+            estadosOrden.forEach(estado => {
+              const grupo = activos.filter(a => a.estado === estado);
+              if (grupo.length > 0) {
+                // Título de la sección
+                let color = '';
+                switch (estado) {
+                  case 'pendiente': color = '#ff9800'; break;
+                  case 'en proceso': color = '#ffe082'; break;
+                  case 'terminado': color = '#1976d2'; break;
+                  case 'entregado': color = '#43a047'; break;
+                  case 'descartado': color = '#e53935'; break;
+                  default: color = '#bdbdbd';
                 }
-                html += `<tr style="${estadoColor}">
-                  <td>${articulo.articulo}</td>
-                  <td>${articulo.n_serie}</td>
-                  <td>${articulo.accesorio}</td>
-                  <td>${articulo.condicion}</td>
-                  <td>${articulo.sucursal}</td>
-                  <td>${articulo.entregado_por}</td>
-                  <td>${articulo.recibido_por}</td>
-                  <td>
-                    ${articulo.tecnico_reparo && articulo.tecnico_reparo !== '' ? `<span>${articulo.tecnico_reparo}</span>` : ''}
-                  </td>
-                  <td>${articulo.fecha_hora}</td>
-                  <td>
-                    <select class="estado-select" data-id="${articulo.id}">
-                      <option value="pendiente" ${articulo.estado === 'pendiente' ? 'selected' : ''} ${disablePendiente}>Pendiente</option>
-                      <option value="en proceso" ${articulo.estado === 'en proceso' ? 'selected' : ''}>En proceso</option>
-                      <option value="terminado" ${articulo.estado === 'terminado' ? 'selected' : ''}>Terminado</option>
-                      <option value="entregado" ${articulo.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
-                      <option value="descartado" ${articulo.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
-                    </select>
-                  </td>
-                  <td>${articulo.fallo || ''}</td>
-                  <td>${articulo.fecha_entregado ? articulo.fecha_entregado : ''}</td>
-                  <td>${articulo.fecha_descartado ? articulo.fecha_descartado : ''}</td>
-                  <td>
-                    <input type="text" class="nota-input" data-id="${articulo.id}" value="${articulo.nota ? articulo.nota.replace(/\"/g, '&quot;') : ''}" placeholder="Agregar nota..." style="width:95%;" ${(articulo.estado === 'en proceso' || articulo.estado === 'terminado') ? '' : 'disabled'} />
-                  </td>
-                  <td>
-                    <button class="ver-historial-btn" data-id="${articulo.id}" style="background:#1976d2;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;margin-bottom:4px;">Historial</button><br>
-                    <button class="toggle-activo-btn" data-id="${articulo.id}" data-activo="${articulo.activo !== false ? '1' : '0'}" style="color:white;background:${articulo.activo !== false ? '#c0392b' : '#27ae60'};border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">${articulo.activo !== false ? 'Desactivar' : 'Activar'}</button>
-                  </td>
-                </tr>`;
-              });
-              html += '</tbody></table>';
-            } else {
+                html += `<h2 style="background:${color};color:${estado==='en proceso'?'#222':'#fff'};padding:10px 18px;border-radius:8px 8px 0 0;margin:40px 0 0 0;">${estado.charAt(0).toUpperCase() + estado.slice(1)}</h2>`;
+                html += '<table style="width:100%;border-collapse:collapse;text-align:left;">';
+                html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie o Asignacion</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Técnico responsable en reparacion</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
+                grupo.forEach(articulo => {
+                  const disablePendiente = (['entregado', 'descartado', 'en proceso', 'terminado'].includes(articulo.estado)) ? 'disabled' : '';
+                  let estadoColor = '';
+                  switch (articulo.estado) {
+                    case 'pendiente': estadoColor = 'background:#ff9800;color:#fff;'; break;
+                    case 'en proceso': estadoColor = 'background:#ffe082;color:#222;'; break;
+                    case 'terminado': estadoColor = 'background:#1976d2;color:#fff;'; break;
+                    case 'entregado': estadoColor = 'background:#43a047;color:#fff;'; break;
+                    case 'descartado': estadoColor = 'background:#e53935;color:#fff;'; break;
+                    default: estadoColor = '';
+                  }
+                  html += `<tr style="${estadoColor}">
+                    <td>${articulo.articulo}</td>
+                    <td>${articulo.n_serie}</td>
+                    <td>${articulo.accesorio}</td>
+                    <td>${articulo.condicion}</td>
+                    <td>${articulo.sucursal}</td>
+                    <td>${articulo.entregado_por}</td>
+                    <td>${articulo.recibido_por}</td>
+                    <td>
+                      ${articulo.tecnico_reparo && articulo.tecnico_reparo !== '' ? `<span>${articulo.tecnico_reparo}</span>` : ''}
+                    </td>
+                    <td>${articulo.fecha_hora}</td>
+                    <td>
+                      <select class="estado-select" data-id="${articulo.id}">
+                        <option value="pendiente" ${articulo.estado === 'pendiente' ? 'selected' : ''} ${disablePendiente}>Pendiente</option>
+                        <option value="en proceso" ${articulo.estado === 'en proceso' ? 'selected' : ''}>En proceso</option>
+                        <option value="terminado" ${articulo.estado === 'terminado' ? 'selected' : ''}>Terminado</option>
+                        <option value="entregado" ${articulo.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
+                        <option value="descartado" ${articulo.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
+                      </select>
+                    </td>
+                    <td>${articulo.fallo || ''}</td>
+                    <td>${articulo.fecha_entregado ? articulo.fecha_entregado : ''}</td>
+                    <td>${articulo.fecha_descartado ? articulo.fecha_descartado : ''}</td>
+                    <td>
+                      <input type="text" class="nota-input" data-id="${articulo.id}" value="${articulo.nota ? articulo.nota.replace(/\"/g, '&quot;') : ''}" placeholder="Agregar nota..." style="width:95%;" ${(articulo.estado === 'en proceso' || articulo.estado === 'terminado') ? '' : 'disabled'} />
+                    </td>
+                    <td>
+                      <button class="ver-historial-btn" data-id="${articulo.id}" style="background:#1976d2;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;margin-bottom:4px;">Historial</button><br>
+                      <button class="toggle-activo-btn" data-id="${articulo.id}" data-activo="${articulo.activo !== false ? '1' : '0'}" style="color:white;background:${articulo.activo !== false ? '#c0392b' : '#27ae60'};border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">${articulo.activo !== false ? 'Desactivar' : 'Activar'}</button>
+                    </td>
+                  </tr>`;
+                });
+                html += '</tbody></table>';
+              }
+            });
+            if (html === '') {
               html = '<p style="text-align:center;">No hay artículos registrados.</p>';
             }
             $('#listadoArticulos').html(html);
@@ -980,6 +993,7 @@ $(document).ready(function() {
       const dispositivosVencidos = articulos.filter(a => {
         if (!a.fecha_hora) return false;
         if (a.estado !== 'pendiente' && a.estado !== 'en proceso') return false;
+        
         // Usar la fecha y hora de ingreso EXACTA del campo (puede venir como 'YYYY-MM-DDTHH:mm' o 'YYYY-MM-DD HH:mm')
         let fechaIng = a.fecha_hora.includes('T') ? new Date(a.fecha_hora) : new Date(a.fecha_hora.replace(' ', 'T'));
         if (isNaN(fechaIng.getTime())) return false;
@@ -991,15 +1005,27 @@ $(document).ready(function() {
     });
   </script>
   <script>
-    window.addEventListener('unload', function(e) {
-  if (!window.performance || performance.navigation.type !== 1) { // 1 = reload
-    localStorage.removeItem('usuario');
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'logout.php', false);
-    xhr.send(null);
-  }
-});
+    // --- SESSION MANAGEMENT: Only logout on real tab/window close, not on navigation ---
+    let navigationByUser = false;
+    // Mark navigation by user (button/link click)
+    $(document).on('click', 'a, button', function(e) {
+      // Only set if navigation is to another page in this app
+      const href = $(this).attr('href') || $(this).attr('onclick');
+      if (href && (href.includes('index.html') || href.includes('desactivados.html'))) {
+        navigationByUser = true;
+      }
+    });
+    // Listen for pagehide (more reliable than unload)
+    window.addEventListener('pagehide', function(e) {
+      // If NOT navigating by user (i.e., real close), then logout
+      if (!navigationByUser && (!window.performance || performance.navigation.type !== 1)) {
+        localStorage.removeItem('usuario');
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'logout.php', false);
+        xhr.send(null);
+      }
+    });
   </script>
-  </body>
+</body>
 <!--SC-->
 </html>
