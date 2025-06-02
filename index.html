@@ -262,6 +262,36 @@
       }
     }
 
+    /* --- SECCIONES POR ESTADO (diseño discreto y translúcido) --- */
+    .estado-section {
+      max-width: 2000px;
+      margin: 40px auto 0 auto;
+      background: rgba(230,230,255,0.60);
+      border-radius: 12px;
+      padding: 24px 18px 18px 18px;
+      box-shadow: 0 2px 12px #1976d222;
+      margin-bottom: 32px;
+      position: relative;
+      transition: box-shadow 0.2s;
+    }
+    .estado-section h2 {
+      color: #1976d2;
+      background: rgba(255,255,255,0.75);
+      border-radius: 8px 8px 0 0;
+      padding: 10px 18px;
+      margin: -24px -18px 18px -18px;
+      font-size: 1.35rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px #1976d211;
+      text-align: left;
+    }
+    .estado-section.pendiente { background: rgba(255,152,0,0.10); }
+    .estado-section.enproceso { background: rgba(255,224,130,0.18); }
+    .estado-section.terminado { background: rgba(25,118,210,0.10); }
+    .estado-section.entregado { background: rgba(67,160,71,0.10); }
+    .estado-section.descartado { background: rgba(229,57,53,0.10); }
+
   </style>
 </head>
 
@@ -580,17 +610,18 @@
             estadosOrden.forEach(estado => {
               const grupo = activos.filter(a => a.estado === estado);
               if (grupo.length > 0) {
-                // Título de la sección
-                let color = '';
+                // Clases para sección y color de encabezado
+                let seccionClase = 'estado-section ';
                 switch (estado) {
-                  case 'pendiente': color = '#ff9800'; break;
-                  case 'en proceso': color = '#ffe082'; break;
-                  case 'terminado': color = '#1976d2'; break;
-                  case 'entregado': color = '#43a047'; break;
-                  case 'descartado': color = '#e53935'; break;
-                  default: color = '#bdbdbd';
+                  case 'pendiente': seccionClase += 'pendiente'; break;
+                  case 'en proceso': seccionClase += 'enproceso'; break;
+                  case 'terminado': seccionClase += 'terminado'; break;
+                  case 'entregado': seccionClase += 'entregado'; break;
+                  case 'descartado': seccionClase += 'descartado'; break;
+                  default: seccionClase += '';
                 }
-                html += `<h2 style="background:${color};color:${estado==='en proceso'?'#222':'#fff'};padding:10px 18px;border-radius:8px 8px 0 0;margin:40px 0 0 0;">${estado.charAt(0).toUpperCase() + estado.slice(1)}</h2>`;
+                html += `<section class="${seccionClase}">`;
+                html += `<h2>${estado.charAt(0).toUpperCase() + estado.slice(1)}</h2>`;
                 html += '<table style="width:100%;border-collapse:collapse;text-align:left;">';
                 html += '<thead><tr style="background:#eee;"><th>Dispositivo</th><th>N° de Serie o Asignacion</th><th>Accesorio</th><th>Condición</th><th>Sucursal</th><th>Usuario de Reporte</th><th>Responsable de Ingreso</th><th>Técnico responsable en reparacion</th><th>Fecha y Hora</th><th>Estado</th><th>Fallo Reportado</th><th>Fecha Entregado</th><th>Fecha Descartado</th><th>Observacion</th><th>Acciones</th></tr></thead><tbody>';
                 grupo.forEach(articulo => {
@@ -638,6 +669,7 @@
                   </tr>`;
                 });
                 html += '</tbody></table>';
+                html += '</section>';
               }
             });
             if (html === '') {
